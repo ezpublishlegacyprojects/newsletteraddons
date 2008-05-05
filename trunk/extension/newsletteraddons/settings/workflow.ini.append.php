@@ -1,0 +1,3 @@
+[EventSettings]
+ExtensionDirectories[]=newsletteraddons
+AvailableEventTypes[]=event_importnewsletter
