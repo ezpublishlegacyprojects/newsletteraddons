@@ -19,12 +19,12 @@ $http =& eZHTTPTool::instance();
 $res =& eZTemplateDesignResource::instance();
 $res->setKeys( array( array( 'newsletter_view', 'register_subscription' ) ) );
 $NewsletterItem = eZSendNewsletterItem::fetchByHash( $Params['UserHash'] );
-$sub  = $NewsletterItem->userData();
-$subscription = eZSubscription::fetch( $NewsletterItem->attribute( 'subscription_id' ) );
 if ( !$NewsletterItem )
 {
     return $Module->handleError( EZ_ERROR_KERNEL_NOT_AVAILABLE, 'kernel' );
 }
+$sub  = $NewsletterItem->userData();
+$subscription = eZSubscription::fetch( $NewsletterItem->attribute( 'subscription_id' ) );
 
 $tpl->setVariable( 'NewsletterItem', $NewsletterItem );
 
