@@ -12,11 +12,11 @@ include_once( eZExtension::baseDirectory() . '/eznewsletter/classes/eznewsletter
 
 $Module =& $Params['Module'];
 
-$tpl =& templateInit();
+$tpl = templateInit();
 
-$http =& eZHTTPTool::instance();
+$http = eZHTTPTool::instance();
 
-$res =& eZTemplateDesignResource::instance();
+$res = eZTemplateDesignResource::instance();
 $res->setKeys( array( array( 'newsletter_view', 'register_subscription' ) ) );
 $NewsletterItem = eZSendNewsletterItem::fetchByHash( $Params['UserHash'] );
 if ( !$NewsletterItem )
@@ -25,11 +25,10 @@ if ( !$NewsletterItem )
 }
 $sub  = $NewsletterItem->userData();
 $subscription = eZSubscription::fetch( $NewsletterItem->attribute( 'subscription_id' ) );
-
 $tpl->setVariable( 'NewsletterItem', $NewsletterItem );
 
 $tpl->setVariable( 'UserHash', $Params['UserHash'] );
-$tpl->setVariable( 'subscriptions', $subscriptions );
+$tpl->setVariable( 'subscriptions', $subscription );
 
 if ( $http->hasPostVariable( 'OKButton' ) )
 {
@@ -37,22 +36,22 @@ if ( $http->hasPostVariable( 'OKButton' ) )
     $siteini = eZINI::instance();
     $sender = $siteini->variable( 'MailSettings', 'EmailSender' );
     $mail = new eZMail();
-    $mail->setReceiver( $sub->Email );
+    $mail->setReceiver( $sub['email'] );
     $mail->setSender( $sender );
     $mail->setSubject( ezi18n( 'newsletteraddons', "Your subscription removal" ) );
     $hostName = eZSys::hostname();
-    $mailtpl =& templateInit();
+    $mailtpl = templateInit();
     $mailtpl->setVariable( 'hostname', $hostName );
     $mailtpl->setVariable( 'siteaccess', $GLOBALS['eZCurrentAccess']['name'] );
     $mailtpl->setVariable( 'NewsletterItem', $NewsletterItem );
-    $mailtext =& $mailtpl->fetch( 'design:eznewsletter/unregister_subscription_email.tpl' );
+    $mailtext = $mailtpl->fetch( 'design:eznewsletter/unregister_subscription_email.tpl' );
 
     $mail->setBody( $mailtext );
 
     eZMailTransport::send( $mail );
     
     $Result = array();
-    $Result['content'] =& $tpl->fetch( "design:eznewsletter/unregister_subscription_success.tpl" );
+    $Result['content'] = $tpl->fetch( "design:eznewsletter/unregister_subscription_success.tpl" );
     $Result['path'] = array( array( 'url' => false,
                                 'text' => ezi18n( 'eznewsletter', 'Remove subscription' ) ) );
     return;
@@ -64,7 +63,7 @@ if ( $http->hasPostVariable( 'CancelButton' ) )
 }
 
 $Result = array();
-$Result['content'] =& $tpl->fetch( "design:eznewsletter/unregister_subscription.tpl" );
+$Result['content'] = $tpl->fetch( "design:eznewsletter/unregister_subscription.tpl" );
 $Result['path'] = array( array( 'url' => false,
                                 'text' => ezi18n( 'eznewsletter', 'Remove subscription' ) ) );
 
