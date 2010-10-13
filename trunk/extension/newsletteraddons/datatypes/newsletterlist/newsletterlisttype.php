@@ -5,17 +5,16 @@ include_once( 'kernel/common/i18n.php' );
 
 define( 'EZ_DATATYPESTRING_NEWSLETTERLIST', 'newsletterlist' );
 
-include_once( eZExtension::baseDirectory() . '/eznewsletter/classes/ezsubscription.php' );
-include_once( eZExtension::baseDirectory() . '/eznewsletter/classes/ezsubscriptionlist.php' );
 
 class newsletterlistType extends eZDataType
 {
+    const DATA_TYPE_STRING = 'newsletterlist';
     /*!
      Initializes with a string id and a description.
     */
     function newsletterlistType()
     {
-        $this->eZDataType( EZ_DATATYPESTRING_NEWSLETTERLIST, ezi18n( 'kernel/classes/datatypes', 'newsletterlist', 'Datatype name' ),
+        $this->eZDataType( self::DATA_TYPE_STRING, ezi18n( 'kernel/classes/datatypes', 'newsletterlist', 'Datatype name' ),
                            array( 'serialize_supported' => false ) );
     }
     function storeSession( &$contentObjectAttribute )
@@ -45,7 +44,7 @@ class newsletterlistType extends eZDataType
     /*!
      Sets the default value.
     */
-    function initializeObjectAttribute( &$contentObjectAttribute, $currentVersion, &$originalContentObjectAttribute )
+    function initializeObjectAttribute( $contentObjectAttribute, $currentVersion, $originalContentObjectAttribute )
     {
         newsletterlistType::storeSession( $contentObjectAttribute );
     }
@@ -53,15 +52,15 @@ class newsletterlistType extends eZDataType
     /*!
      \reimp
     */
-    function validateObjectAttributeHTTPInput( &$http, $base, &$contentObjectAttribute )
+    function validateObjectAttributeHTTPInput( $http, $base, $contentObjectAttribute )
     {
-        return EZ_INPUT_VALIDATOR_STATE_ACCEPTED;
+        return eZInputValidator::STATE_ACCEPTED;
     }
 
     /*!
      Fetches the http post var string input and stores it in the data instance.
     */
-    function fetchObjectAttributeHTTPInput( &$http, $base, &$contentObjectAttribute )
+    function fetchObjectAttributeHTTPInput( $http, $base, $contentObjectAttribute )
     {
         $http = eZHTTPTool::instance();
         $lastdata = unserialize( $contentObjectAttribute->attribute( "data_text" ) );
@@ -91,12 +90,12 @@ class newsletterlistType extends eZDataType
      Does nothing since it uses the data_text field in the content object attribute.
      See fetchObjectAttributeHTTPInput for the actual storing.
     */
-    function storeObjectAttribute( &$attribute )
+    function storeObjectAttribute( $attribute )
     {
         $http = eZHTTPTool::instance();
 
     }
-    function onPublish( &$attribute, &$contentObject, &$publishedNodes )
+    function onPublish( $attribute, $contentObject, $publishedNodes )
     {
 
         $http = eZHTTPTool::instance();
@@ -108,18 +107,18 @@ class newsletterlistType extends eZDataType
         {
             $subscription = eZSubscription::fetchByUserSubscriptionListID( $userID, $id );  
 
-            if ( isset( $subscription ) and $subscription->attribute( 'status' ) == eZSubscription_StatusApproved and in_array( $id, $data['unregister'] ) )
+            if ( isset( $subscription ) and $subscription->attribute( 'status' ) == eZSubscription::StatusApproved and in_array( $id, $data['unregister'] ) )
             {
                 $subscription->unsubscribe();
             }
-            elseif( isset( $subscription ) and $subscription->attribute( 'status' ) == eZSubscription_StatusRemovedSelf and in_array( $id, $data['register'] ) )
+            elseif( isset( $subscription ) and $subscription->attribute( 'status' ) == eZSubscription::StatusRemovedSelf and in_array( $id, $data['register'] ) )
             {
-                $subscription->setAttribute( 'status', eZSubscription_StatusApproved );
+                $subscription->setAttribute( 'status', eZSubscription::StatusApproved );
                 $subscription->sync();
             }
             elseif ( !isset( $subscription ) and in_array( $id, $data['register'] ) )
             {
-                $list = eZSubscriptionList::fetch( $id , eZSubscriptionList_StatusPublished, true, true );
+                $list = eZSubscriptionList::fetch( $id , eZSubscriptionList::StatusPublished, true, true );
                 if ( $list )
                     $subscription = $list->registerUser( $userID );
             }
@@ -168,26 +167,26 @@ class newsletterlistType extends eZDataType
         return false;
     }
 
-    function storeClassAttribute( &$attribute, $version )
+    function storeClassAttribute( $attribute, $version )
     {
     }
 
-    function storeDefinedClassAttribute( &$attribute )
+    function storeDefinedClassAttribute( $attribute )
     {
     }
 
     /*!
      \reimp
     */
-    function validateClassAttributeHTTPInput( &$http, $base, &$classAttribute )
+    function validateClassAttributeHTTPInput( $http, $base, $classAttribute )
     {
-        return EZ_INPUT_VALIDATOR_STATE_ACCEPTED;
+        return eZInputValidator::STATE_ACCEPTED;
     }
 
     /*!
      \reimp
     */
-    function fetchClassAttributeHTTPInput( &$http, $base, &$classAttribute )
+    function fetchClassAttributeHTTPInput( $http, $base, $classAttribute )
     {
         return true;
     }
@@ -195,7 +194,7 @@ class newsletterlistType extends eZDataType
     /*!
      Returns the content.
     */
-    function &objectAttributeContent( &$contentObjectAttribute )
+    function objectAttributeContent( $contentObjectAttribute )
     {
         newsletterlistType::storeSession( $contentObjectAttribute );
         $return =  array();
@@ -207,7 +206,7 @@ class newsletterlistType extends eZDataType
                                                 null,
                                                 array( 'user_id' => $userID,
                                                        
-                                                       'version_status' => eZSubscription_VersionStatusPublished ),
+                                                       'version_status' => eZSubscription::VersionStatusPublished ),
                                                 true );
 
         foreach ( $lists as $list )
@@ -233,8 +232,7 @@ class newsletterlistType extends eZDataType
             {
                 $listitem['selected'] = false;
             }
-
-            $nodesList = eZContentObjectTreeNode::subTree( $treeParameters, 2 );
+            $nodesList =  eZContentObjectTreeNode::fetch( 2 )->subTree( $treeParameters );
             foreach ( $subscriptions as $subscription )
             {
                 
@@ -243,14 +241,14 @@ class newsletterlistType extends eZDataType
                 {
                     $listitem['subscription'] = $subscription;
                 
-                    if ( $listitem['subscription']->attribute( 'status' ) == eZSubscription_StatusPending or
-                         $listitem['subscription']->attribute( 'status' ) == eZSubscription_StatusConfirmed or
-                         $listitem['subscription']->attribute( 'status' ) == eZSubscription_StatusRemovedAdmin )
+                    if ( $listitem['subscription']->attribute( 'status' ) == eZSubscription::StatusPending or
+                         $listitem['subscription']->attribute( 'status' ) == eZSubscription::StatusConfirmed or
+                         $listitem['subscription']->attribute( 'status' ) == eZSubscription::StatusRemovedAdmin )
                         $listitem['disabled'] = true;
 
                     if ( !array_key_exists( 'selected', $listitem ) )
                     {
-                            if ( $listitem['subscription']->attribute( 'status' ) == eZSubscription_StatusApproved )
+                            if ( $listitem['subscription']->attribute( 'status' ) == eZSubscription::StatusApproved )
                                 $listitem['selected'] = true;
                             else
                                 $listitem['selected'] = false;
@@ -274,7 +272,7 @@ class newsletterlistType extends eZDataType
     /*!
      Returns the meta data used for storing search indeces.
     */
-    function metaData( &$contentObjectAttribute )
+    function metaData( $contentObjectAttribute )
     {
         return false;
     }
@@ -282,12 +280,12 @@ class newsletterlistType extends eZDataType
     /*!
      Returns the content of the string for use as a title
     */
-    function title( &$contentObjectAttribute )
+    function title( $contentObjectAttribute, $name = null )
     {
         return false;
     }
 
-    function hasObjectAttributeContent( &$contentObjectAttribute )
+    function hasObjectAttributeContent( $contentObjectAttribute )
     {
         return true;
     }
@@ -312,6 +310,6 @@ class newsletterlistType extends eZDataType
 
 }
 
-eZDataType::register( EZ_DATATYPESTRING_NEWSLETTERLIST, 'newsletterlisttype' );
+eZDataType::register( newsletterlistType::DATA_TYPE_STRING, 'newsletterlisttype' );
 
 ?>
